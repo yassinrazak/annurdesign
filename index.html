@@ -10,11 +10,12 @@
     h2 { color: #333; text-align: center; }
     .form-group { margin-bottom: 15px; }
     label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
+    .optional { font-weight: normal; font-size: 12px; color: #888; }
     input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
     button { width: 100%; padding: 12px; background: #2c3e50; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
     button:hover { background: #1a252f; }
     button:disabled { background: #95a5a6; cursor: not-allowed; }
-    #status { margin-top: 15px; font-weight: bold; text-align: center; color: #27ae60; }
+    #status { margin-top: 15px; font-weight: bold; text-align: center; color: #27ae60; line-height: 1.4; }
     .error { color: #c0392b !important; }
   </style>
 </head>
@@ -25,6 +26,10 @@
       <div class="form-group">
         <label>Customer Name:</label>
         <input type="text" id="customerName" required>
+      </div>
+      <div class="form-group">
+        <label>Buyer Email: <span class="optional">(Optional - sends PDF receipt)</span></label>
+        <input type="email" id="customerEmail" placeholder="buyer@example.com">
       </div>
       <div class="form-group">
         <label>Item Description:</label>
@@ -50,16 +55,15 @@
       const status = document.getElementById('status');
       const form = document.getElementById('invoiceForm');
       
-      // Gather data
       const data = {
         customerName: document.getElementById('customerName').value,
+        customerEmail: document.getElementById('customerEmail').value,
         description: document.getElementById('description').value,
         amount: document.getElementById('amount').value
       };
 
-      // Update UI
       btn.disabled = true;
-      btn.innerText = "Generating PDF...";
+      btn.innerText = data.customerEmail ? "Generating & Emailing..." : "Generating PDF...";
       status.className = "";
       status.innerText = "";
 
@@ -72,7 +76,11 @@
         const result = await response.json();
 
         if (result.success) {
-          status.innerHTML = `Success! <a href="${result.url}" target="_blank">View PDF</a>`;
+          let msg = `PDF Saved! <a href="${result.url}" target="_blank">View PDF</a>`;
+          if (result.emailSent) {
+            msg += `<br>Receipt emailed to ${data.customerEmail}`;
+          }
+          status.innerHTML = msg;
           form.reset();
         } else {
           status.className = "error";
